@@ -170,11 +170,13 @@ bot.action("getMovies", ctx=>{
     console.log(i)
     ctx.replyWithHTML( "Оберіть, будь ласка" , {
         reply_markup : {
-            inline_keyboard: [[arrayOfBtnGenre1],
-            [arrayOfBtnGenre2],
-            [arrayOfBtnGenre3],
-            [arrayOfBtnGenre4],
-            [arrayOfBtnGenre5]]
+            inline_keyboard: [
+                [arrayOfBtnGenre1],
+                [arrayOfBtnGenre2],
+                [arrayOfBtnGenre3],
+                [arrayOfBtnGenre4],
+                [arrayOfBtnGenre5]
+            ]
         }
     });
 })
