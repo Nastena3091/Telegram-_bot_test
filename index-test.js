@@ -24,7 +24,7 @@
 //              console.log('Error: ${er}');
 //          })
     
-// }
+// }+
 
 // bot.on('message', msg => {
 //     const chatId=msg.chat.id
