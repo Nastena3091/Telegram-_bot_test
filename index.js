@@ -1,11 +1,13 @@
-const {Telegraf, Markup} = require("telegraf");
+const {Telegraf} = require("telegraf");
+const { Keyboard, Key} = require('telegram-keyboard')
 const BOT_TOKEN = "5745685658:AAGbmxZLX8ewwlziW6MgCjFG7g7Om1U4kOA";
 const bot = new Telegraf(BOT_TOKEN);
 const axios = require("axios");
-const  translate  =  require ( 'translate-google' ) 
+const  translate  =  require ( 'translate-google' ); 
 
 let offset,
-    actor="",
+    actors="",
+    directors,
     max=11322,
     total=11322,
     typeOption="Movie",
@@ -19,10 +21,10 @@ let genreOfMovies = [{type: "action", title: "Бойовик", id: 801362, max: 
 {type: "sci-Fi", title: "Наукова фантастика", id: 108533, max: "108"}, {type: "actionThrillers", title: "Трилер", id: 43048, max: "646"},
 {type: "militaryFilms", title: "Військовий", id: 5962, max: "93"}, {type: "crimeFilms", title: "Кримінальний", id: 5824, max: "1311"},
 {type: "cultFilms", title: "Культовий", id: 7627, max: "53"},{type: "documentaries", title: "Документальний", id: 6839, max: "299"},
-{type: "fantasy", title: "Фантастика", id: 9744, max: "254"}, {type: "festiveFavourites", title: "Святковий", id: 107985, max: "8"}, 
-{type: "noneGenre", title: "Нічого", id: 0, max: "11322"}];
-let genreOfSeries = [{type: "TVProgrammesBasedBooks", title: "ТВ програма", id: 1819174, max: "369"}, {type: "k-dramas", title: "Дорама", id: 58, max: "11322"}
-]
+{type: "fantasy", title: "Фантастика", id: 9744, max: "254"}, {type: "festiveFavourites", title: "Святковий", id: 107985, max: "8"}];
+let genreOfSeries = [{type: "TVProgrammesBasedBooks", title: "ТВ програма", id: 1819174, max: "369"}, {type: "k-dramas", title: "Дорама", id: 2638104, max: "58"},
+{type: "anime", title: "Аніме", id: 7424, max: "215"}, {type: "romanticTVDramas", title: "Романтика", id: 26056, max: "300"},
+{type: "сrimeTVDramas", title: "Кримінал", id: 26009, max: "225"},]
 let genreFromServer = [];    
 var data_from_server = {};
 
@@ -81,120 +83,154 @@ function getGenres() {
     });
 }
 
-bot.start((ctx) => {
-    //ctx.reply("Оберіть фільм або серіал")
-    ctx.replyWithHTML( "Оберіть, будь ласка" , {
-        reply_markup : {
-            inline_keyboard: [
-                [{text : "Фільм", callback_data: "getMovies"}], // функція для фільмів
-                [{text : "Серіал", callback_data: "getSeries"}] // функція для серіалів 
-            ]
-        }
-    });
-});
+bot.start(async (ctx) => {
+    const keyboard = Keyboard.make([
+      ['Фільм', 'Серіал']
+    ])
+  
+    await ctx.reply("Оберіть фільм або серіал", keyboard.reply())
+  })
 
 bot.hears(/Привіт+/i,ctx => {
     ctx.reply("\u{1F44B}")
 });
-
-// bot.hears(/Жанр+/i,ctx => {
-//     if(typeOption=="movie"){
-//         ctx.replyWithHTML( "Оберіть жанр фільму" , {
-//             reply_markup : {
-//                 inline_keyboard: [
-//                     [{text : "Бойовик", callback_data:"action"}, {text : "Аніме", callback_data: "anime"}],
-//                     [{text : "Комедія", callback_data: "classicComedies"}, {text : "Драма", callback_data: "drama"}],
-//                     [{text : "Сімейний", callback_data: "childrenFamilyFilms"}, {text : "Жахи", callback_data: "horrorFilms"}],
-//                     [{text : "Мюзикл", callback_data: "musicMusicals"}, {text : "Романтика", callback_data: "romanticFilmsBasedBook"}],
-//                     [{text : "Наукова фантастика", callback_data: "sci-Fi"}, {text : "Трилер", callback_data: "actionThrillers"}],
-//                     [{text : "Військовий", callback_data: "militaryFilms"}, {text : "Фантастика", callback_data: "fantasy"}],
-//                     [{text : "Кримінальний", callback_data: "crimeFilms"}, {text : "Культовий", callback_data: "cultFilms"}],
-//                     [{text : "Сучасний класичний", callback_data: "modernClassicMovies"}, {text : "Документальний", callback_data: "documentaries"}],
-//                     [{text : "Святковий", callback_data: "festiveFavourites"}],
-//                     [{text : "Нічого", callback_data: "noneGenre"}],
-//                 ]
-//             }
-//         })
-//     } else {
-//         ctx.replyWithHTML( "Оберіть жанр серіалу" , {
-//             reply_markup : {
-//                 inline_keyboard: [
-//                     [{text : "ТB програма", callback_data: "TVProgrammesBasedBooks"}],
-//                     [{text : "Дорама", callback_data: "k-dramas"}],
-//                     [{text : "Аніме", callback_data: "anime"}],
-//                     [{text : "Романтика", callback_data: "romanticTVDramas"}],
-//                     [{text : "Кримінал", callback_data: "crimeTVDramas"}],
-//                     [{text : "Нічого", callback_data: "noneGenre"}]
-//                 ]
-//             }
-//         })
-//     }
-// });
-
-bot.action("getMovies", ctx=>{
+bot.hears(/Фільм+/i, ctx=>{
     let arrayOfBtnGenre1 = [];
     let arrayOfBtnGenre2 = [];
     let arrayOfBtnGenre3 = [];
     let arrayOfBtnGenre4 = [];
     let arrayOfBtnGenre5 = [];
+    let arrayOfBtnGenre6 = [];
     let i = 1;
+    typeOption="Movie";
     genreOfMovies.forEach(element => {
         switch(i){
             case 1 :
             {
                 arrayOfBtnGenre1.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
                 i++
+                break;
             }
             case 2 :
             {
                 arrayOfBtnGenre2.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
                 i++
+                break;
             }
             case 3 :
             {
                 arrayOfBtnGenre3.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
                 i++
+                break;
             }
             case 4 :
             {
                 arrayOfBtnGenre4.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
                 i++
+                break;
             }
             case 5 :
             {
                 arrayOfBtnGenre5.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 6:
+            {
+                arrayOfBtnGenre6.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
                 i=1
+                break;
             }
         }
     });
-    console.log(i)
-    ctx.replyWithHTML( "Оберіть, будь ласка" , {
+    ctx.replyWithHTML( "Оберіть, будь ласка, жанр:" , {
         reply_markup : {
             inline_keyboard: [
-                [arrayOfBtnGenre1],
-                [arrayOfBtnGenre2],
-                [arrayOfBtnGenre3],
-                [arrayOfBtnGenre4],
-                [arrayOfBtnGenre5]
+                arrayOfBtnGenre1,
+                arrayOfBtnGenre2,
+                arrayOfBtnGenre3,
+                arrayOfBtnGenre4,
+                arrayOfBtnGenre5,
+                arrayOfBtnGenre6,
+                [{text: "Нічого", callback_data:"getMoviesByGenre-"+0+"-"+"11322"}]
             ]
         }
     });
 })
 
-bot.action(/^getMoviesByGenre-(\d+)-(\d+)$/, ctx => {
+bot.hears(/Серіал+/i,async (ctx)=>{
+    let arrayOfBtnGenre1 = [];
+    let arrayOfBtnGenre2 = [];
+    let arrayOfBtnGenre3 = [];
+    let arrayOfBtnGenre4 = [];
+    let arrayOfBtnGenre5 = [];
+    let arrayOfBtnGenre6 = [];
+    let i = 1;
+    typeOption="Series";
+    genreOfSeries.forEach(element => {
+        switch(i){
+            case 1 :
+            {
+                arrayOfBtnGenre1.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 2 :
+            {
+                arrayOfBtnGenre2.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 3 :
+            {
+                arrayOfBtnGenre3.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 4 :
+            {
+                arrayOfBtnGenre4.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 5 :
+            {
+                arrayOfBtnGenre5.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i++
+                break;
+            }
+            case 6:
+            {
+                arrayOfBtnGenre6.push({text : element.title, callback_data: "getMoviesByGenre-"+element.id+"-"+element.max})
+                i=1
+                break;
+            }
+        }
+    });
+    ctx.replyWithHTML( "Оберіть, будь ласка, жанр:" , {
+        reply_markup : {
+            inline_keyboard: [
+                arrayOfBtnGenre1,
+                arrayOfBtnGenre2,
+                arrayOfBtnGenre3,
+                arrayOfBtnGenre4,
+                arrayOfBtnGenre5,
+                arrayOfBtnGenre6,
+                [{text: "Нічого", callback_data:"getMoviesByGenre-"+0+"-"+"3319"}]
+            ]
+        }
+    })
+})
+bot.action(/^getMoviesByGenre-(\d+)-(\d+)$/, async (ctx) => {
     console.log(ctx.match[1]);
     console.log(ctx.match[2]);
-    getDataFromServer(ctx.match[1], ctx.match[2], "movie").then(() => {
-        ctx.replyWithPhoto({ url: data_from_server.img }, { caption: data_from_server.title + " (" + data_from_server.year + ")"})
-        ctx.replyWithHTML("Детальна інформація",{
-            reply_markup : {
-                inline_keyboard: [
-                    [{text : "Опис", callback_data:"synopsis"}, {text : "Брали участь", callback_data: "actor"}],
-                ]
-            }
-        })
-    })
-
+    await getDataFromServer(ctx.match[1], ctx.match[2], typeOption)
+    await ctx.replyWithPhoto({ url: data_from_server.img })
+    const keyboard = await Keyboard.make([
+        Key.callback("Опис", 'synopsis'),
+        Key.callback('Брали участь', 'actor')
+      ],{columns: 1})
+    await ctx.reply(data_from_server.title + " (" + data_from_server.year + ")",keyboard.inline())
 })
 bot.action("synopsis", ctx=>{
     translate ( data_from_server.synopsis ,  { to : 'uk' } ) . then ( res  =>  { 
@@ -220,162 +256,27 @@ bot.action("actor", ctx=>{
     axios.request(options)
     .then(function (response) {
         console.log(response.data)
-        totalActor=response.data.Object.total;
-        actor="";
-        for(let i=0 ; i < totalActor;i++){
-                actor+=response.data.results[i].full_name+"  -  "+response.data.results[i].person_type + "\n"
-        }
-        ctx.reply(actor)
-        console.log(actor)
+        let data_from_server_actor=response.data.results;
+        actors="Актори: \n";
+        let actor='';
+        let director='';
+        directors="Режисер:\n";
+        data_from_server_actor.forEach(element=>{
+            if(element.person_type=="Actor" && actor!=element.full_name){
+                actors+=element.full_name+"\n"
+                actor=element.full_name
+            }
+            if(element.person_type=="Director" && director!=element.full_name){
+                directors+=element.full_name+"\n"
+                director=element.full_name
+            }
+        })
+        if(directors=="Режисер:\n") {ctx.reply(actors)}
+        else {ctx.reply(actors+directors)}
+        console.log(actors)
     }).catch(function (error) {
         console.error(error)
     });
-});
-// bot.action("action", ctx=>{
-//     ctx.reply("Бойовик");
-//     genre="801362";
-//     max=341;
-// })
-// bot.action("anime", ctx=>{
-//     ctx.reply("Аніме");
-//     genre="7424";
-//     max=133;
-// })
-// bot.action("classicComedies", ctx=>{
-//     ctx.reply("Комедія");
-//     genre="31694";
-//     max=34;
-// })
-// bot.action("drama", ctx=>{
-//     ctx.reply("Драма");
-//     genre="5763";
-//     max=4708;
-// })
-// bot.action("childrenFamilyFilms", ctx=>{
-//     ctx.reply("Сімейний");
-//     genre="783";
-//     max=1036;
-// })
-// bot.action("horrorFilms", ctx=>{
-//     ctx.reply("Жахи");
-//     genre="8711";
-//     max=750;
-// })
-// bot.action("musicMusicals", ctx=>{
-//     ctx.reply("Мюзикл");
-//     genre="52852";
-//     max=452;
-// })
-// bot.action("romanticFilmsBasedBook", ctx=>{
-//     ctx.reply("Романтика");
-//     genre="3830";
-//     max=43;
-// })
-// bot.action("sci-Fi", ctx=>{
-//     ctx.reply("Наукова фантастика");
-//     genre="108533";
-//     max=108;
-// })
-// bot.action("actionThrillers", ctx=>{
-//     ctx.reply("Трилер");
-//     genre="43048";
-//     max=646;
-// })
-// bot.action("TVProgrammesBasedBooks", ctx=>{
-//     ctx.reply("ТВ програма");
-//     genre="1819174";
-//     max=369;
-// })
-// bot.action("militaryFilms", ctx=>{
-//     ctx.reply("Військовий");
-//     genre="5962";
-//     max=93;
-// })
-// bot.action("crimeFilms", ctx=>{
-//     ctx.reply("Кримінальний");
-//     genre="5824";
-//     max=1311;
-// })
-// bot.action("cultFilms", ctx=>{
-//     ctx.reply("Культовий");
-//     genre="7627";
-//     max=53;
-// })
-// bot.action("documentaries", ctx=>{
-//     ctx.reply("Документальний");
-//     genre="6839";
-//     max=299;
-// })
-// bot.action("fantasy", ctx=>{
-//     ctx.reply("Фантастика");
-//     genre="9744";
-//     max=254;
-// })
-// bot.action("festiveFavourites", ctx=>{
-//     ctx.reply("Святковий");
-//     genre="107985";
-//     max=8;
-// })
-// bot.action("k-dramas", ctx=>{
-//     ctx.reply("Дорама");
-//     genre="58";
-//     max=11322;
-// })
-// bot.action("romanticTVDramas", ctx=>{
-//     ctx.reply("Романтика");
-//     genre="26056";
-//     max=300;
-// })
-// bot.action("сrimeTVDramas", ctx=>{
-//     ctx.reply("Кримінал");
-//     genre="26009";
-//     max=225;
-// })
-// bot.action("modernClassicMovies", ctx=>{
-//     ctx.reply("Сучасний класичний");
-//     genre="76186";
-//     max=22;
-// })
-// bot.action("noneGenre", ctx=>{
-//     ctx.reply("Нічого");
-//     genre="";
-//     max=11322;
-// })
-// bot.hears(/Фільм+/i,ctx => {
-//     typeOption="movie";
-//     genre="";
-//     max=11322;
-//     ctx.reply("Обрано фільм, виберіть жанр або натисніть кнопку 'Обрати'")
-// })
-// bot.hears(/Серіал+/i,ctx => {
-//     typeOption="series";
-//     genre="";
-//     max=3338;
-//     ctx.reply("Обрано серіал, виберіть жанр або натисніть кнопку 'Обрати'")
-// })
-bot.hears(/Обрати+/i,ctx => {
-    offset=getRandomInt(max);
-    let param;
-    if (genre){
-        param={limit: '1', offset: offset, order_by: 'title', genre_list: genre, type: typeOption}
-    } else {
-        param={limit: '1', offset: offset, order_by: 'title', type: typeOption}
-    }
-    if (total!=max){
-        max=total;
-    }
-   //here
-})
-
-
-bot.on('message', (ctx) => {
-    ctx.reply('Меню бота', {
-        reply_markup: Markup.keyboard([
-            ['Фільм','Серіал'],
-            ['Жанр'],
-            ['Обрати']
-        ])
-    })    
 });
 
 bot.launch();
