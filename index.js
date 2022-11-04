@@ -225,6 +225,7 @@ bot.hears(/Серіал+/i,async (ctx)=>{
 })
 bot.action(/^getMoviesByGenre-(\d+)$/, async (ctx) => {
     console.log(ctx.match[1]);
+    ctx.reply("Зачекайте, будь ласка...")
     await getDataFromServer(ctx.match[1], typeOption)
     await console.log(max)
     await getDataFromServer(ctx.match[1], typeOption)
