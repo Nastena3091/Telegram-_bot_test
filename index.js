@@ -281,31 +281,38 @@ bot.action("actor", ctx=>{
           'X-RapidAPI-Host': 'unogs-unogs-v1.p.rapidapi.com'
         }
       };
-    axios.request(options)
-    .then(function (response) {
-        console.log(response.data)
-        let data_from_server_actor=response.data.results;
-        actors="Актори: \n";
-        let actor='';
-        let director='';
-        directors="Режисер:\n";
-        data_from_server_actor.forEach(element=>{
-            if(element.person_type=="Actor" && actor!=element.full_name){
-                actors+=element.full_name+"\n"
-                actor=element.full_name
-            }
-            if(element.person_type=="Director" && director!=element.full_name){
-                directors+=element.full_name+"\n"
-                director=element.full_name
-            }
+      if(netflixID!=0){
+        axios.request(options)
+        .then(function (response) {
+            console.log(response.data)
+            let data_from_server_actor=response.data.results;
+            actors="Актори: \n";
+            let actor='';
+            let director='';
+            directors="Режисер:\n";
+            data_from_server_actor.forEach(element=>{
+                if(element.person_type=="Actor" && actor!=element.full_name){
+                    actors+=element.full_name+"\n"
+                    actor=element.full_name
+                }
+                if(element.person_type=="Director" && director!=element.full_name){
+                    directors+=element.full_name+"\n"
+                    director=element.full_name
+                }
+            })
+            if(directors=="Режисер:\n") {ctx.reply(actors)}
+            else {ctx.reply(actors+directors)}
+            netflixID=0;
+            console.log(actors)
         })
+        .catch(function (error) {
+            console.error(error)
+        });
+      } else {
         if(directors=="Режисер:\n") {ctx.reply(actors)}
-        else {ctx.reply(actors+directors)}
-        console.log(actors)
-    })
-    .catch(function (error) {
-        console.error(error)
-    });
+            else {ctx.reply(actors+directors)}
+      }
+    
 });
 bot.action("genre", ctx=>{
     netflixID=data_from_server.netflix_id
