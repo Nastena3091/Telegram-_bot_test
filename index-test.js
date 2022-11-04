@@ -66,3 +66,4 @@
 //         }
 //     });
 // });
+// [{text : "Дивитися зараз", url : "https://www.imdb.com/title/"+data_from_server.imdb_id+"/"}]
