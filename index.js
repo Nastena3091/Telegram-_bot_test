@@ -12,6 +12,7 @@ let offset,
     Total=11322,
     typeOption="Movie",
     totalActor,
+    genres,
     netflixID;
 
 let genreOfMovies = [{type: "action", title: "Бойовик", id: 801362}, {type: "classicComedies", title: "Комедія", id:31694},
@@ -71,8 +72,8 @@ function getGenres() {
         }
     };
     axios.request(options).then(function (response) {
-        genreFromServer = response.data;    
-        console.log(response.data);
+        genreFromServer = response.data.results;    
+        // console.log(response.data.results);
     }).catch(function (error) {
         console.error(error);
     });
@@ -93,7 +94,34 @@ bot.start(async (ctx) => {
   
     await ctx.reply("Оберіть фільм або серіал", keyboard.reply())
   })
-
+bot.hears('/genre', async (ctx) => {
+    let genreServer=""
+    
+    if (genreServer==""){
+        const options = {
+            method: 'GET',
+            url: 'https://unogs-unogs-v1.p.rapidapi.com/static/genres',
+            headers: {
+                'X-RapidAPI-Key': '446a849920msh40579f805fb4bffp15077ajsn780f820fb8f3',
+                'X-RapidAPI-Host': 'unogs-unogs-v1.p.rapidapi.com'
+            }
+            };
+            axios.request(options).then(function (response) {
+                genreFromServer = response.data.results;
+                genreFromServer.forEach(element=>{
+                    genreServer+=element.genre+"\n"    
+                })
+                ctx.reply(genreServer)
+                console.log(genreServer)    
+                // console.log(response.data.results);
+            }).catch(function (error) {
+                console.error(error);
+            });
+    } else {
+        ctx.reply(genreServer)
+        console.log(genreServer)
+    }
+  })
 bot.hears(/Привіт+/i,ctx => {
     ctx.reply("\u{1F44B}")
 });
@@ -230,11 +258,11 @@ bot.action(/^getMoviesByGenre-(\d+)$/, async (ctx) => {
     await console.log(max)
     await getDataFromServer(ctx.match[1], typeOption)
     await ctx.replyWithPhoto({ url: data_from_server.img })
-    const keyboard = await Keyboard.make([
-        Key.callback("Опис", 'synopsis'),
-        Key.callback('Брали участь', 'actor'),
-        Key.callback('Жанри фільму', 'genre'),
-      ],{columns: 1})
+    // const keyboard = await Keyboard.make([
+    //     Key.callback("Опис", 'synopsis'),
+    //     Key.callback('Брали участь', 'actor'),
+    //     Key.callback('Жанри фільму', 'genre'),
+    //   ],{columns: 1})
       if(typeOption=="Series") {
         await ctx.replyWithHTML( data_from_server.title + " (" + data_from_server.year + ")", {
             reply_markup : {
@@ -260,6 +288,85 @@ bot.action(/^getMoviesByGenre-(\d+)$/, async (ctx) => {
             });
       }
       
+})
+bot.hears(/[A-Z]+/i,async ctx => {
+    let message = ctx.message.text;
+    let name="";
+    console.log(message);
+    const options = {
+        method: 'GET',
+        url: 'https://unogs-unogs-v1.p.rapidapi.com/static/genres',
+        headers: {
+            'X-RapidAPI-Key': '446a849920msh40579f805fb4bffp15077ajsn780f820fb8f3',
+            'X-RapidAPI-Host': 'unogs-unogs-v1.p.rapidapi.com'
+        }
+    };
+    axios.request(options).then(function (response) {
+        genreFromServer = response.data.results;  
+        genreFromServer.forEach(element => {
+            console.log(element.genre)
+            if (element.genre==message){
+                genres=element.netflix_id
+                name=element.genre
+                ctx.replyWithHTML('Оберіть тип',{
+                    reply_markup:{
+                        inline_keyboard:[
+                            [{text:"Фільм",callback_data:"Film"}],
+                            [{text:"Серіал",callback_data:"Series"}]
+                        ]
+                    }
+                })
+            }
+        })
+        if (name!=message){
+            ctx.reply("Вибачте, неправильно введена назва жанру")
+        }  
+        // console.log(response.data.results);
+    }).catch(function (error) {
+        console.error(error);
+    });
+    
+})
+bot.action("Film", async ctx=>{
+    ctx.reply("Зачекайте, будь ласка...")
+    typeOption="Movie";
+    await getDataFromServer(genres, typeOption)
+    await console.log(max)
+    await getDataFromServer(genres, typeOption)
+    await ctx.replyWithPhoto({ url: data_from_server.img })
+    await ctx.replyWithHTML( data_from_server.title + " (" + data_from_server.year + ")\nТривалість:   "+getRunTime(data_from_server.runtime) , {
+            reply_markup : {
+                inline_keyboard: [
+                    [{text : "Дивитися зараз", url : "https://www.imdb.com/title/"+data_from_server.imdb_id+"/"}],
+                    [{text : "Опис", callback_data: "synopsis"}],
+                    [{text : "Брали участь", callback_data: "actor"}],
+                    [{text : "Жанри фільму", callback_data: "genre"}],
+                ]
+            }
+        });
+})
+bot.action("Series", async ctx=>{
+    ctx.reply("Зачекайте, будь ласка...")
+    typeOption="Series";
+    await getDataFromServer(genres, typeOption)
+    await console.log(max)
+    await getDataFromServer(genres, typeOption)
+    await ctx.replyWithPhoto({ url: data_from_server.img })
+    // const keyboard = await Keyboard.make([
+    //     Key.callback("Опис", 'synopsis'),
+    //     Key.callback('Брали участь', 'actor'),
+    //     Key.callback('Жанри фільму', 'genre'),
+    //   ],{columns: 1})
+    await ctx.replyWithHTML( data_from_server.title + " (" + data_from_server.year + ")", {
+        reply_markup : {
+            inline_keyboard: [
+                [{text : "Дивитися зараз", url : "https://www.imdb.com/title/"+data_from_server.imdb_id+"/"}],
+                [{text : "Опис", callback_data: "synopsis"}],
+                [{text : "Брали участь", callback_data: "actor"}],
+                [{text : "Жанри фільму", callback_data: "genre"}],
+            ]
+        }
+    });
 })
 bot.action("synopsis", ctx=>{
     translate ( data_from_server.synopsis ,  { to : 'uk' } ) . then ( res  =>  { 
