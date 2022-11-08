@@ -92,7 +92,7 @@ bot.start(async (ctx) => {
       ['Фільм', 'Серіал']
     ])
   
-    await ctx.reply("Оберіть фільм або серіал", keyboard.reply())
+    await ctx.reply("Оберіть фільм або серіал. Також ви можете самостійно вписати назву жанру англійською мовою", keyboard.reply())
   })
 bot.hears('/genre', async (ctx) => {
     let genreServer=""
