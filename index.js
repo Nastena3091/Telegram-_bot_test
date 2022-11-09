@@ -1,6 +1,7 @@
 const {Telegraf} = require("telegraf");
 const { Keyboard, Key} = require('telegram-keyboard')
 const BOT_TOKEN = "5745685658:AAGbmxZLX8ewwlziW6MgCjFG7g7Om1U4kOA";
+//const BOT_TOKEN = "2032874895:AAFdhZ_Qz5eaWFU2JQ6u4mkr9DaLFp0ig9A";
 const bot = new Telegraf(BOT_TOKEN);
 const axios = require("axios");
 const  translate  =  require ( 'translate-google' ); 
@@ -73,7 +74,7 @@ function getGenres() {
     };
     axios.request(options).then(function (response) {
         genreFromServer = response.data.results;    
-        // console.log(response.data.results);
+        console.log(response.data.results);
     }).catch(function (error) {
         console.error(error);
     });
@@ -87,15 +88,24 @@ function getRunTime(runtime) {
     second=runtime-(minute*60+hour*3600)
     return hour+" : "+minute+" : "+second
 }
+
+function sliceIntoChunks(arr, chunkSize) {
+    const res = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+        const chunk = arr.slice(i, i + chunkSize);
+        res.push(chunk);
+    }
+    return res;
+}
+
 bot.start(async (ctx) => {
     const keyboard = Keyboard.make([
       ['Фільм', 'Серіал']
     ])
-  
     await ctx.reply("Оберіть фільм або серіал. Також ви можете самостійно вписати назву жанру англійською мовою", keyboard.reply())
   })
 bot.hears('/genre', async (ctx) => {
-    let genreServer=""
+    let genreServer="", i=0;
     
     if (genreServer==""){
         const options = {
@@ -107,12 +117,15 @@ bot.hears('/genre', async (ctx) => {
             }
             };
             axios.request(options).then(function (response) {
+               
                 genreFromServer = response.data.results;
-                genreFromServer.forEach(element=>{
-                    genreServer+=element.genre+"\n"    
+                genreFromServer = sliceIntoChunks(genreFromServer, 100);
+                console.log(genreFromServer.length);
+                genreFromServer.forEach(genreObjects => {
+                    let str = genreObjects.map(genreObj => genreObj.genre).join(', ');
+                    ctx.reply(str);
                 })
-                ctx.reply(genreServer)
-                console.log(genreServer)    
+                //console.log(genreServer)    
                 // console.log(response.data.results);
             }).catch(function (error) {
                 console.error(error);
