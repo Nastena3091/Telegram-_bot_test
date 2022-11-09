@@ -122,7 +122,7 @@ bot.hears('/genre', async (ctx) => {
                 genreFromServer = sliceIntoChunks(genreFromServer, 100);
                 console.log(genreFromServer.length);
                 genreFromServer.forEach(genreObjects => {
-                    let str = genreObjects.map(genreObj => genreObj.genre).join(', ');
+                    let str = genreObjects.map(genreObj => genreObj.genre).join('\n ');
                     ctx.reply(str);
                 })
                 //console.log(genreServer)    
@@ -383,7 +383,7 @@ bot.action("Series", async ctx=>{
 })
 bot.action("synopsis", ctx=>{
     translate ( data_from_server.synopsis ,  { to : 'uk' } ) . then ( res  =>  { 
-        ctx.reply(
+        ctx.replyWithHTML(
             data_from_server.synopsis +"\n Переклад: \n" + res
         )
         console.log(res) 
