@@ -89,11 +89,16 @@ function getRunTime(runtime) {
     return hour+" : "+minute+" : "+second
 }
 
-function sliceIntoChunks(arr, chunkSize) {
+function sliceIntoChunks(arr, chunkSize) { //тут ріжемо масив на шматки, chunkSize - розмір шматка
     const res = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
-        const chunk = arr.slice(i, i + chunkSize);
-        res.push(chunk);
+        const chunk = arr.slice(i, i + chunkSize); //slice ріже з заданої позиції до позиції 
+        res.push(chunk); // і кладемо відрізані шматки в масив res
+        /*  
+            const arr = [1, 2, 3, 4, 5, 6, 7, 8];
+            console.log(spliceIntoChunks(arr, 2));
+            отримаємо [ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ], [ 7, 8 ] ] 
+        */ 
     }
     return res;
 }
@@ -119,11 +124,11 @@ bot.hears('/genre', async (ctx) => {
             axios.request(options).then(function (response) {
                
                 genreFromServer = response.data.results;
-                genreFromServer = sliceIntoChunks(genreFromServer, 100);
+                genreFromServer = sliceIntoChunks(genreFromServer, 100); //наша функція описана вище, ріжимо на масивчики по 100 елементів
                 console.log(genreFromServer.length);
-                genreFromServer.forEach(genreObjects => {
-                    let str = genreObjects.map(genreObj => genreObj.genre).join('\n ');
-                    ctx.reply(str);
+                genreFromServer.forEach(genreObjects => {  //перербор великого масиву з сервера, в genreObjects потрапляють внутрішні маленькі порізані масиви по 100 елементів
+                    let str = genreObjects.map(genreObj => genreObj.genre).join('\n'); //тут трошки складно, бо треба сліпити між собою властивість genre, map - це теж перебор масива http://xn--80adth0aefm3i.xn--j1amh/array.map
+                    ctx.reply(str); //перебрали відрізаний шмат, з'єднали жанри через кому і вивели повідомленням. І так з кожним відрізаним масивчиком
                 })
                 //console.log(genreServer)    
                 // console.log(response.data.results);
